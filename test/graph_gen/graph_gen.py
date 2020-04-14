@@ -14,19 +14,33 @@ class graph_node:
 		self.resource_exe_time = []
 def split_number(number, parts):
 	count_per_part = []
+	#print("inside split_number")
 	while len(count_per_part) == 0 :
 	        for i in range( parts-1):
         	        tmp1 = (number-sum(count_per_part))/(parts - i)
                 	tmp2 = 0
+               		#print("tmp1: ", int(tmp1))
+               		
 	                while tmp2<=0:
-        	                tmp2 = int(rndm.normalvariate(tmp1, tmp1/2))
+	                	    #print('oops...')
+	                	    #print("haha")
+	                	    print(tmp1)
+	                	    print("tmp2: ", tmp2)
+	                	    if int(tmp1) < 2:
+	                	    	tmp2 = 1
+	                	    else:
+        	                	tmp2 = int(rndm.normalvariate(tmp1, tmp1/2))
+        	               
+
                 	count_per_part.extend([tmp2])
 
 	        count_per_part.extend([number-sum(count_per_part)])
-        	#print("MIN", min(count_per_part))
+        	print("MIN", min(count_per_part))
+        	print("number/parts", number, "/", parts)
 	        if min(count_per_part) <= 0 :
         	        count_per_part = []
                 	print("sampling error")
+	
 	return count_per_part
 resource_count = 3
 graph_height = 6
@@ -42,7 +56,7 @@ with open("graph.config","r") as f:
 	config = f.readlines()
 config = [(x.strip()).split() for x in config]
 #print(config)
-SEED = 1000
+SEED = 9000
 for x in config:
 	#print(x)
 	if len(x) == 0:
@@ -94,10 +108,13 @@ for i in range(resource_count):
 #start with one node in the graph
 node_count_per_level = [1]
 #number of nodes per level
+
+#split_number(vertex_count-2,graph_height-2)
+print("Vertexcount: ", vertex_count-2, "graph_height: ", graph_height-2)
 node_count_per_level.extend(split_number(vertex_count-2,graph_height-2))
 #end with one node in the graph
 node_count_per_level.extend([1])
-
+print("hey")
 
 
 #print(node_count_per_level)
@@ -107,30 +124,44 @@ level_nodes_list = []
 count = 0
 #connect nodes in adjacent level
 #assign the number of edges (to each node) in each level to connect with adjacent level
+print("NoLevels: ", len(node_count_per_level))
+print(node_count_per_level)
 for level in range(len(node_count_per_level)):
+	#print("I'm here")
 	tmp1 = []
 	elem = node_count_per_level[level]
 	out_edge_count_to_next_level = []
 	if level != len(node_count_per_level) -1 :
 		if elem > node_count_per_level[level+1]	:
 			out_edge_count_to_next_level = split_number(elem,elem)
+			#print("AFter split_number(elem,elem)")
 		else :
 			out_edge_count_to_next_level = split_number(node_count_per_level[level+1] , elem)
+			#print("AFter split_number(elem2,elem)")
+		#print("hello")
 	else:
+		#print("problem")
 		out_edge_count_to_next_level = list(np.zeros((elem)))
 	#print("OUT",out_edge_count_to_next_level)
 		
 	for i in range(elem):
+		print("count/i:", count, i)
 		tmp1.extend([graph_node(count, level, int(out_edge_count_to_next_level[i]))])
 		count = count + 1
+
+	#print("Line 133")
 	for elem1 in tmp1:
+		print(tmp1)
 		nodes_list.extend([elem1])
+
+	#print("Line 137")
 	level_nodes_list.append(tmp1)	
 #for level in range(len(level_nodes_list)):	
 #	print("Level", level)
 #	for elem in level_nodes_list[level]:
 #		print(elem.task_id, elem.level, elem.outgoing_edge_count)
 
+print("Passed level in range")
 tmp = 0
 #make actual connections among the nodes in adjacent levels
 while tmp != graph_height:
@@ -287,6 +318,21 @@ for i in range(resource_count):
 with open("resource_BW.csv", "w") as f:
     writer = csv.writer(f)
     writer.writerows(write_data)
+
+resource_count = len(resource_com_bw) 
+
+#for DAG
+write_data = []
+for i in range(resource_count):
+	#tmp = ["P_" + str(i)]	
+	tmp = []	
+	for j in range(resource_count):
+		tmp.extend([resource_com_bw[i][j]])
+	write_data.append(tmp)
+#print(write_data)
+with open("bw_"+ str(len(nodes_list)) +".csv", "w") as f:
+    writer = csv.writer(f)
+    writer.writerows(write_data)
 ###write connectivity matrix with data transfer size
 
 task_count = len(connect_matrix)
@@ -303,6 +349,17 @@ with open("task_connectivity.csv", "w") as f:
     writer = csv.writer(f)
     writer.writerows(write_data)
 
+write_data = []
+for i in range(task_count):
+        #tmp = ["T_" + str(i)]
+        tmp = []
+        for j in range(task_count):
+                tmp.extend([connect_matrix[i][j]])
+        write_data.append(tmp)
+#print(write_data)
+with open("ew_"+str(len(nodes_list))+".csv", "w") as f:
+    writer = csv.writer(f)
+    writer.writerows(write_data)
 ##write execution time matrix
 resource_count = len(resource_com_bw)
 tmp = ["P_"+str(i) for i in range(resource_count)]
@@ -318,6 +375,16 @@ with open("task_exe_time.csv", "w") as f:
     writer = csv.writer(f)
     writer.writerows(write_data)
 
+write_data = []
+task_count = len(connect_matrix)
+for i in range(len(nodes_list)):
+	tmp = []
+	for j in range(resource_count):
+		tmp.extend([nodes_list[i].resource_exe_time[j]])
+	write_data.append(tmp)
+with open("nw_"+str(len(nodes_list))+".csv", "w") as f:
+    writer = csv.writer(f)
+    writer.writerows(write_data)
 
 
 

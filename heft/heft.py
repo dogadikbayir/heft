@@ -181,7 +181,10 @@ def schedule_dag(dag, computation_matrix=W0, communication_matrix=C0, communicat
                 second_job = _self.proc_schedules[proc][job+1]
                 assert first_job.end <= second_job.start, \
                 f"Jobs on a particular processor must finish before the next can begin, but job {first_job.task} on processor {first_job.proc} ends at {first_job.end} and its successor {second_job.task} starts at {second_job.start}"
-    
+        
+        if node == (len(sorted_nodes) - 1):
+            print(minTaskSchedule)
+
     dict_output = {}
     for proc_num, proc_tasks in _self.proc_schedules.items():
         for idx, task in enumerate(proc_tasks):
@@ -189,6 +192,7 @@ def schedule_dag(dag, computation_matrix=W0, communication_matrix=C0, communicat
                 dict_output[task.task] = (proc_num, idx, [proc_tasks[idx-1].task])
             else:
                 dict_output[task.task] = (proc_num, idx, [])
+
 
     return _self.proc_schedules, _self.task_schedules, dict_output
 
