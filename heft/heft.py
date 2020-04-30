@@ -181,9 +181,9 @@ def schedule_dag(dag, computation_matrix=W0, communication_matrix=C0, communicat
                 second_job = _self.proc_schedules[proc][job+1]
                 assert first_job.end <= second_job.start, \
                 f"Jobs on a particular processor must finish before the next can begin, but job {first_job.task} on processor {first_job.proc} ends at {first_job.end} and its successor {second_job.task} starts at {second_job.start}"
-        
+        endMinTaskSchedule = 0.0
         if node == (len(sorted_nodes) - 1):
-            print(minTaskSchedule)
+            endMinTaskSchedule = (minTaskSchedule).end
 
     dict_output = {}
     for proc_num, proc_tasks in _self.proc_schedules.items():
@@ -192,9 +192,13 @@ def schedule_dag(dag, computation_matrix=W0, communication_matrix=C0, communicat
                 dict_output[task.task] = (proc_num, idx, [proc_tasks[idx-1].task])
             else:
                 dict_output[task.task] = (proc_num, idx, [])
-
-
-    return _self.proc_schedules, _self.task_schedules, dict_output
+	    
+	    #proc_mapping = [0] * 200
+	    #for t in self.task_schedules:
+		#proc_mapping[t.task] = t.proc
+	   
+ 	    #print(proc_mapping)
+    return endMinTaskSchedule, _self.proc_schedules, _self.task_schedules, dict_output
 
 def _scale_by_operating_freq(_self, **kwargs):
     if "operating_freqs" not in kwargs:
@@ -333,7 +337,7 @@ def _compute_eft(_self, dag, node, proc):
         if _self.communication_matrix[predjob.proc, proc] == 0:
             ready_time_t = predjob.end
         else:
-            ready_time_t = predjob.end + dag[predjob.task][node]['weight'] / _self.communication_matrix[predjob.proc, proc] + _self.communication_startup[predjob.proc]
+            ready_time_t = predjob.end + dag[predjob.task][node]['weight'] / _self.communication_matrix[predjob.proc, proc] #+ _self.communication_startup[predjob.proc]
         logger.debug(f"\tNode {prednode} can have its data routed to processor {proc} by time {ready_time_t}")
         if ready_time_t > ready_time:
             ready_time = ready_time_t
